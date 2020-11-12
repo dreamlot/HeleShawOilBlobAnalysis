@@ -24,9 +24,9 @@ def cut(im, x=[0.0,1.0], y=[0.0,1.0], FlagPercent=True):
             im = im[int(x[0]*nx):int(x[1]*nx), int(y[0]*ny):int(y[1]*ny),:];
     else:
         if im.ndim == 2:
-            im = im[x[0]:x[1], y[0]:y[1]];
-        elif im.nim == 3:
-            im = im[x[0]:x[1], y[0]:y[1],:];
+            im = im[int(x[0]):int(x[1]), int(y[0]):int(y[1])];
+        elif im.ndim == 3:
+            im = im[int(x[0]):int(x[1]), int(y[0]):int(y[1]),:];
     return(im)
 
 # Cut all images in a directory and store the results in a new path. im is a
@@ -34,7 +34,7 @@ def cut(im, x=[0.0,1.0], y=[0.0,1.0], FlagPercent=True):
 # By default, x and y are ranges in percentage, which means they are whithin
 # the range of [0.0,1.0]. If FlagFlagPercent is set to False, the cutting would be
 # based on pixels.
-def cutall(x=[0.0,1.0],y=[0.0,1.0],sourcepath='.',targetpath='.'):
+def cutall(x=[0.0,1.0],y=[0.0,1.0],sourcepath='.',targetpath='.',FlagPercent):
     # get the list of all figures in the working directory
 
     import os
@@ -54,7 +54,7 @@ def cutall(x=[0.0,1.0],y=[0.0,1.0],sourcepath='.',targetpath='.'):
         filename = sourcepath+'/'+ite[1];
         im = cv2.imread(filename, cv2.IMREAD_COLOR)
         # cut the image
-        im = cut(im,x=x,y=y)
+        im = cut(im,x=x,y=y,FlagPercent=FlagPercent)
         savename = targetpath+'/'+ite[1];
         cv2.imwrite(savename,im)
 

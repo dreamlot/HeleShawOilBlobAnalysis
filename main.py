@@ -619,17 +619,21 @@ if __name__ == '__main__':
     cut the image, use only the left hand side half
     '''
     # working directory
-    sourcepath_cut = 'F:/ferrofluid_experiment/postprocessing/noflow_rotateMag/ts3_2fps';
+    sourcepath_cut = 'E:/20201111HeleShaw/N45-4';
     targetpath_cut = sourcepath_cut +'/cut';
+    
+    os.mkdir(targetpath_cut)
 
     from cut import cutall
-    #cutall(y=[0,0.5],sourcepath=sourcepath_cut,targetpath=targetpath_cut)
+    cutall(x=[0,1000],y=[400,1000],FlagPercent=False,sourcepath=sourcepath_cut,targetpath=targetpath_cut)
 
 
     # working directory
     #sourcepath = 'F:/ferrofluid_experiment/postprocessing/noflow_rotateMag/ts3_1fps/cut';
     sourcepath = targetpath_cut
     targetpath = sourcepath +'/../result';
+    
+    os.mkdir(targetpath_cut)
 
     # parameters
     thre = 127;
