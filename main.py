@@ -622,10 +622,10 @@ if __name__ == '__main__':
     sourcepath_cut = 'E:/20201111HeleShaw/N45-4';
     targetpath_cut = sourcepath_cut +'/cut';
     
-    os.mkdir(targetpath_cut)
+    #os.mkdir(targetpath_cut)
 
     from cut import cutall
-    cutall(x=[0,1000],y=[400,1000],FlagPercent=False,sourcepath=sourcepath_cut,targetpath=targetpath_cut)
+    #cutall(x=[0,1000],y=[400,1000],FlagPercent=False,sourcepath=sourcepath_cut,targetpath=targetpath_cut)
 
 
     # working directory
@@ -633,13 +633,16 @@ if __name__ == '__main__':
     sourcepath = targetpath_cut
     targetpath = sourcepath +'/../result';
     
-    os.mkdir(targetpath_cut)
+    try:
+        os.mkdir(targetpath_cut)
+    except FileExistsError:
+        pass
 
     # parameters
     thre = 127;
     iteration = [1,5,4]
     showresult = False;
-    dotsize = 7;
+    dotsize = 3;
     subsampledistance = 9;
 
 
@@ -648,6 +651,7 @@ if __name__ == '__main__':
     freqratio = 2;
 
     # number of points used to fit the circle
+    #window = [19]
     window = [19]
 
     # load the files in the source directory
@@ -680,7 +684,7 @@ if __name__ == '__main__':
         cha1,contours,imorig,__ = findOilBlob(filename,iterations=iteration,showresult=showresult);
 
         # shrink unwanted dimension
-        oilcontour = contours[1][:,0,:].astype(float);
+        oilcontour = contours[:,0,:].astype(float);
         '''
         # interpolate straight section
         oilcontour = interpolateContour(oilcontour,insert=freqratio-1,distancetol=10)

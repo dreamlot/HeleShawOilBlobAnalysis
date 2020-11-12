@@ -34,7 +34,7 @@ def cut(im, x=[0.0,1.0], y=[0.0,1.0], FlagPercent=True):
 # By default, x and y are ranges in percentage, which means they are whithin
 # the range of [0.0,1.0]. If FlagFlagPercent is set to False, the cutting would be
 # based on pixels.
-def cutall(x=[0.0,1.0],y=[0.0,1.0],sourcepath='.',targetpath='.',FlagPercent):
+def cutall(x=[0.0,1.0],y=[0.0,1.0],sourcepath='.',targetpath='.',FlagPercent=True):
     # get the list of all figures in the working directory
 
     import os
