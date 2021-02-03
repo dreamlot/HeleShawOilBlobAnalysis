@@ -105,30 +105,52 @@ for ite0 in range(len(path_list)):
     readname = path + path_list[ite0] + '_x.txt'
     x_list[ite0] = np.loadtxt(readname)
     plt.figure(fig_x.number)
-    plt.plot(x_list[ite0],label=path_list[ite0])
+    plt.plot(x_list[ite0],'.',label=path_list[ite0])
+    plt.xlim([1000,1500])
+    plt.legend()
+    plt.xlabel('frame index')
+    plt.ylabel('length [pixels]')
     
     readname =  path + path_list[ite0]+'_y.txt'
     y_list[ite0] = np.loadtxt(readname)
     plt.figure(fig_y.number)
-    plt.plot(y_list[ite0],label=path_list[ite0])
+    plt.plot(y_list[ite0],'.',label=path_list[ite0])
+    plt.xlim([1000,1500])
+    plt.legend()
+    plt.xlabel('frame index')
+    plt.ylabel('length [pixels]')
     
     readname =  path + path_list[ite0]+'_a.txt'
     a_list[ite0] = np.loadtxt(readname)
     plt.figure(fig_a.number)
-    plt.plot(a_list[ite0],label=path_list[ite0])
+    plt.plot(a_list[ite0],'.',label=path_list[ite0])
+    plt.xlim([1000,1500])
+    plt.legend()
+    plt.xlabel('frame index')
+    plt.ylabel('length [pixels]')
     
     readname =  path + path_list[ite0]+'_b.txt'
     b_list[ite0] = np.loadtxt(readname)
     plt.figure(fig_b.number)
-    plt.plot(b_list[ite0],label=path_list[ite0])
+    plt.plot(b_list[ite0],'.',label=path_list[ite0])
+    plt.xlim([1000,1500])
+    plt.legend()
+    plt.xlabel('frame index')
+    plt.ylabel('length [pixels]')
     
     readname =  path + path_list[ite0]+'_angle.txt'
     angle_list[ite0] = np.loadtxt(readname)
     plt.figure(fig_angle.number)
-    plt.plot(angle_list[ite0],label=path_list[ite0])
+    plt.plot(angle_list[ite0],'.',label=path_list[ite0])
+    plt.xlim([1000,1500])
+    plt.legend()
+    plt.xlabel('frame index')
+    plt.ylabel('rad')
     
     readname =  path + path_list[ite0]+'_e.txt'
     e_list[ite0] = np.loadtxt(readname)
     plt.figure(fig_e.number)
-    plt.plot(e_list[ite0],label=path_list[ite0])
-    
+    plt.plot(e_list[ite0],'.',label=path_list[ite0])
+    plt.xlim([1000,1500])
+    plt.legend()
+    plt.xlabel('frame index')

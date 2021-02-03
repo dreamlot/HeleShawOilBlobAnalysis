@@ -83,6 +83,10 @@ e_list = [
 
 
 for ite0 in range(len(path_list)):
+    
+    if ite0!=1:
+        continue
+    
     sourcepath_cut = path_list[ite0]
     '''
     cut the image, use only the left hand side half
@@ -93,9 +97,10 @@ for ite0 in range(len(path_list)):
     
     #os.mkdir(targetpath_cut)
     
+    '''
     from cut import cutall
-    #cutall(x=[0,1000],y=[400,1000],FlagPercent=False,sourcepath=sourcepath_cut,targetpath=targetpath_cut)
-    
+    cutall(x=[0,1000],y=[400,1000],FlagPercent=False,sourcepath=sourcepath_cut,targetpath=targetpath_cut)
+    '''
     
     # working directory
     #sourcepath = 'F:/ferrofluid_experiment/postprocessing/noflow_rotateMag/ts3_1fps/cut';
@@ -145,7 +150,22 @@ for ite0 in range(len(path_list)):
     # This is for debuging. Run only certain number of images.
     count = 0;
     for ite in enumerate(files):
+        count = count+1
+        
+        # Uncomment this blob if need to accelerate the computation.
+        #if count % 10 > 0:
+        #    continue
+        #if count < 380:
+        #    continue
+        #if count > 382:
+        #    break
+        
         print(' '+ite[1])
+        
+        # output the specific data for plotting
+        #if ite[1] != 'n45-40380.tif':
+        #    continue
+        
     
         filename = sourcepath+'/'+ite[1];
     
@@ -159,17 +179,20 @@ for ite0 in range(len(path_list)):
         oilcontour = interpolateContour(oilcontour,insert=freqratio-1,distancetol=10)
         '''
         # subsample
-        '''
+        
         ind = np.arange(0,int(len(oilcontour)/freqratio));
         oilcontour = oilcontour[ind*freqratio]
-        '''
+        
+        
+        
+        # comment the following codes for quick evaluation of a,b,x,y,e
         print('size before subsample: ',oilcontour.shape)
         oilcontour = subSample(oilcontour,distancetol=subsampledistance)
         print('size after subsample: ',oilcontour.shape)
         # remove concave sections
         oilcontour = removeConcave(oilcontour)
         print('size after removal of concave points: ',oilcontour.shape)
-    
+        
     
         '''
         # averaging filter
@@ -177,7 +200,10 @@ for ite0 in range(len(path_list)):
         oilcontour[:,1] = avgFilter(oilcontour[:,1], int(freqratio))
         '''
     
-    
+        '''
+        # comment the following codes  for quick evaluation of a,b,x,y,e
+        # to save time, skip this par, directly fit the ellipse
+        
         # compute curvature
         curvatureradius = findCurvatureRadius(oilcontour,window=window[0]);
     
@@ -213,22 +239,43 @@ for ite0 in range(len(path_list)):
         imshow(imorig,showresult)
         savename = targetpath+'/'+ite[1]
         cv2.imwrite(savename,imorig)
+        '''
+        
+        # output the specific data for plotting
+        #np.savetxt('E:\\20201111HeleShaw\\N45-4\\result\\contour.txt',oilcontour);
+        #np.savetxt('E:\\20201111HeleShaw\\N45-4\\result\\curvatureradius.txt',curvatureradius);
+        
     
         '''
-        count = count+1
         if count > 5:
             break
         '''
         # find the ecliptical fit
         ellps = findEllipse(oilcontour)
+        # tmpa = max(a_list[ite0],b_list[ite0])
+        # tmpb = min(a_list[ite0],b_list[ite0])
         
         x_list[ite0] = np.append(x_list[ite0],ellps[0])
         y_list[ite0] = np.append(y_list[ite0],ellps[1])
-        a_list[ite0] = np.append(a_list[ite0],ellps[2])
-        b_list[ite0] = np.append(b_list[ite0],ellps[3])
-        angle_list[ite0] = np.append(angle_list[ite0],ellps[4])
-        e_list[ite0] = np.append(e_list[ite0],np.sqrt(1-(ellps[3]/ellps[2])**2))
-    
+        
+        if ellps[2] > ellps[3]:
+            
+            a_list[ite0] = np.append(a_list[ite0],ellps[2])
+            b_list[ite0] = np.append(b_list[ite0],ellps[3])
+            
+            
+            angle_list[ite0] = np.append(angle_list[ite0],ellps[4])
+            e_list[ite0] = np.append(e_list[ite0],np.sqrt(1-(ellps[3]/ellps[2])**2))
+        else:
+            
+            a_list[ite0] = np.append(a_list[ite0],ellps[3])
+            b_list[ite0] = np.append(b_list[ite0],ellps[2])
+            
+            
+            angle_list[ite0] = np.append(angle_list[ite0],ellps[4]+np.pi/2)
+            e_list[ite0] = np.append(e_list[ite0],np.sqrt(1-(ellps[2]/ellps[3])**2))
+            
+        
     
     savename = path_list[ite0]+'_x.txt'
     np.savetxt(savename,x_list[ite0])    

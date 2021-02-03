@@ -153,7 +153,11 @@ def findOilBlob(filename,threshold=127,color='gray',iterations=[2,8,6],showresul
 
 
     # convert to grayscale
-    if color in ['red','RED','Red']:
+    if color in ['blue','BLUE','Blue','B','b']:
+        imgray = imReference[:,:,0]
+    elif color in ['green','GREEN','Green','G','g']:
+        imgray = imReference[:,:,1]
+    elif color in ['red','RED','Red','R','r']:
         imgray = imReference[:,:,2]
     else:
         imgray = cv2.cvtColor(imReference, cv2.COLOR_BGR2GRAY)
@@ -173,9 +177,10 @@ def findOilBlob(filename,threshold=127,color='gray',iterations=[2,8,6],showresul
     # denoise
     imgray = cv2.fastNlMeansDenoising(imgray,None,10,7,21);
 
+    imshow(imgray,showresult,name='denoise')
 
     # threshold
-    ret, thresh = cv2.threshold(imgray, 127, 255, cv2.THRESH_OTSU)
+    ret, thresh = cv2.threshold(imgray, threshold, 255, cv2.THRESH_OTSU)
     imshow(thresh,showresult,name='threshold')
 
 
@@ -286,14 +291,25 @@ def findCurvatureRadius(points,window=5):
 
 
 # Function of a ellipse
+# 
+# para, list:
+#   0: x_c
+#   1: y_c    
+#   2: a
+#   3: b
+#   4: tilt angle
 def funcEllipse(para,x,y):
-    return( (((x-para[0])*np.cos(para[4])+(y-para[1])*np.sin(para[4]))/para[2])**2 \
-             + ((-(x-para[0])*np.sin(para[4])+(y-para[1])*np.cos(para[4]))/para[3])**2 \
-             - 1 )
+    #x_hat = (x-para[0])*np.cos(para[4]) - (y-para[1])*np.sin(para[4])
+    #y_hat = (x-para[0])*np.sin(para[4]) + (y-para[1])*np.cos(para[4])
+    x_hat =  (x-para[0])*np.cos(para[4]) + (y-para[1])*np.sin(para[4])
+    y_hat = -(x-para[0])*np.sin(para[4]) + (y-para[1])*np.cos(para[4])
+    return( (x_hat/para[2])**2 + (y_hat/para[3])**2 - 1 )
     #return( np.sqrt((x-para[0])**2 + (y-para[1])**2) - para[2])
 
 '''
 # from a set of x y values, fit a ellipse
+# nonlinear least square fit
+
 input:
     points: n x 2, np.array
 output:
@@ -313,15 +329,101 @@ def findEllipse(points):
         R_guess = ( max(y)-min(y) ) / 2;
         guess = np.array([x_guess,y_guess,R_guess,R_guess,0]);
         #print(guess)
-        lower_bounds = [min(x),min(y),0,0,0]
-        upper_bounds = [max(x),max(y),max(max(x),max(y))/2,max(max(x),max(y))/2,2*np.pi]
+        lower_bounds = [min(x),min(y),0,0,-2*np.pi]
+        upper_bounds = [max(x),max(y),max(max(x),max(y)),max(max(x),max(y)),2*np.pi]
         bounds = (lower_bounds,upper_bounds)
     except:
         raise Exception(points.shape)
     return(optimize.least_squares(fun=funcEllipse,x0=guess, \
-                                  xtol = 1e-12,bounds=bounds,args=(x,y)).x)
+                                  xtol = 1e-15,bounds=bounds,args=(x,y)).x)
 
 
+'''
+# from a set of x y values, fit a ellipse
+# least square fit
+# Sr = f(x,y) = Ax^2 + Cy^2 + Bxy + Dx + Ey + 1 = 0
+
+input:
+    points: n x 2, np.array
+output:
+        : list:
+            x0:     x coordinate of ellipse
+            y0:     y coordinate of ellipse
+            a:      semi-major axis
+            b:      semi-minor axis
+            theta:  tilt angle
+'''
+def findEllipse2(points):
+    x2 = points[:,0]**2
+    x3 = points[:,0]**3
+    x4 = points[:,0]**4
+    y2 = points[:,1]**2
+    y3 = points[:,1]**3
+    y4 = points[:,1]**4
+    xy = points[:,0] * points[:,1]
+    x2y2 = xy**2
+    x2y = x2 * points[:,1]
+    xy2 = y2 * points[:,0]
+    x3y = x3 * points[:,1]
+    xy3 = y3 * points[:,0]
+    
+    
+    x2 = np.sum(x2)
+    x3 = np.sum(x3)
+    x4 = np.sum(x4)
+    y2 = np.sum(y2)
+    y3 = np.sum(y3)
+    y4 = np.sum(y4)
+    xy = np.sum(xy)
+    x2y2 = np.sum(x2y2)
+    x2y = np.sum(x2y)
+    xy2 = np.sum(xy2)
+    x3y = np.sum(x3y)
+    xy3 = np.sum(xy3)
+    
+    
+    # sequence
+    # x2,y2,xy,x,y
+    Amatrix = np.array([[x4,   x2y2,x3y, x3, x2y], \
+                        [x2y2, y4,  xy3, xy2,y3], \
+                        [x3y,  xy3, x2y2,x2y,xy2], \
+                        [x3,   xy2, x2y, x2, xy], \
+                        [x2y,  y3,  xy2, xy, y2]])
+    bvec = np.array([-x2,-y2,-xy,-np.sum(points[:,0]),-np.sum(points[1])])
+    
+    # get A,C,B,D,E
+    res = np.linalg.solve(Amatrix,bvec)
+    
+    print(res)
+    
+    # from wikipedia: https://en.wikipedia.org/wiki/Ellipse
+    # notice the definition of B and C
+    A = res[0]
+    C = res[1]
+    B = res[2]
+    D = res[3]
+    E = res[4]
+    
+    
+    
+    x0 = ( 2*C*D - B*E ) / ( B**2 - 4*A*C )
+    y0 = ( 2*A*E - B*D ) / ( B**2 - 4*A*C )
+    if B == 0:
+        if A <= C:
+            theta = 0;
+        else:
+            theta = np.pi/2;
+    else:
+        theta = atan(1, ( C-A - np.sqrt( (A-C)**2 + B**2) ) / B )
+    
+    tmpab = 2 * ( A*E**2 + C*D**2 - B*D*E + (B**2-4*A*C)*1 )
+    
+    print(tmpab)
+    
+    a = -np.sqrt( tmpab * ( (A+C) + np.sqrt( (A-C)**2 + B**2 )) ) / (B**2 - 4*A*C)
+    print((A+C) - np.sqrt( (A-C)**2 + B**2 )) 
+    b = -np.sqrt( tmpab * ( (A+C) - np.sqrt( (A-C)**2 + B**2 )) ) / (B**2 - 4*A*C)
+    return(x0,y0,a,b,theta,A,C,B,D,E)
 
 
 
@@ -332,7 +434,7 @@ def generateCircle(xyr,n=100):
     y = xyr[1] + xyr[2] * np.sin(theta)
     return(x,y)
 
-# compute the arctangent from xy coordinates
+# compute the angle (arctangent) from xy coordinates
 def atan(x,y,x0=0,y0=0):
     x = x-x0;
     y = y-y0;
@@ -454,7 +556,7 @@ def test1():
     #imshow(cha1,showresult)
 
     # shrink unwanted dimension
-    oilcontour = contours[1][:,0,:].astype(float);
+    oilcontour = contours[:,0,:].astype(float);
 
     oilcontour0 = np.copy(oilcontour)
 
@@ -615,13 +717,15 @@ def test1():
 
 
 if __name__ == '__main__':
+    
     '''
     cut the image, use only the left hand side half
     '''
     # working directory
     sourcepath_cut = 'E:/20201111HeleShaw/N45-4';
+    sourcepath_cut = 0
     targetpath_cut = sourcepath_cut +'/cut';
-    
+
     #os.mkdir(targetpath_cut)
 
     from cut import cutall
@@ -632,7 +736,7 @@ if __name__ == '__main__':
     #sourcepath = 'F:/ferrofluid_experiment/postprocessing/noflow_rotateMag/ts3_1fps/cut';
     sourcepath = targetpath_cut
     targetpath = sourcepath +'/../result';
-    
+
     try:
         os.mkdir(targetpath_cut)
     except FileExistsError:
